@@ -13,7 +13,7 @@ import 'package:worldwalletnew/services/loginApi.dart';
       // Replace with your actual API endpoint to submit an order
       final response = await _dio.post('$baseUrl/place_food_order/', data: orderData);
 print(response.data);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Booking success')));
         Navigator.pop(context);
          Navigator.pop(context);

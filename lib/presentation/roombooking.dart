@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:worldwalletnew/presentation/homepage.dart';
 import 'package:worldwalletnew/presentation/paymentintws.dart';
 import 'package:worldwalletnew/presentation/roomsearch1.dart';
 import 'package:worldwalletnew/services/loginApi.dart';
@@ -18,6 +19,20 @@ class BookingScreen extends StatefulWidget {
 class _BookingScreenState extends State<BookingScreen> {
   DateTime? checkInDate;
   DateTime? checkOutDate;
+
+  // Function to calculate the total number of days
+  int getTotalDays() {
+    if (checkInDate != null && checkOutDate != null) {
+      return checkOutDate!.difference(checkInDate!).inDays;
+    }
+    return 0; // Return 0 if dates are not selected
+  }
+
+  // Function to calculate the total amount
+  double getTotalAmount() {
+    int totalDays = getTotalDays();
+    return totalDays * widget.room.price; // Multiply price per day by the number of days
+  }
 
   // Function to handle the check-in date selection
   Future<void> selectCheckInDate(BuildContext context) async {
@@ -84,6 +99,7 @@ class _BookingScreenState extends State<BookingScreen> {
       "ROOMID": widget.room.id.toString(), // Convert roomId to String if it's an int
       "checkindate": checkInDateFormatted, // Send only the date as a string
       "checkoutdate": checkOutDateFormatted, // Send only the date as a string
+      'price':getTotalAmount().toStringAsFixed(2)
     };
 
     try {
@@ -100,14 +116,25 @@ class _BookingScreenState extends State<BookingScreen> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // If the server returns a 200 response, navigate to payment process
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PaymentProcess(
-              price: widget.room.price, // This is where you pass the price
+        showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Payment Successful", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Text("You have paid ₹${getTotalAmount().toStringAsFixed(2)} successfully."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                // Navigate to the homepage after closing the dialog
+                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Homepage(username: usernames,)),(route) => false,);
+              },
+              child: Text("OK", style: TextStyle(color: Colors.blue)),
             ),
-          ),
+          ],
         );
+      },
+    );
       } else {
         // Handle failure (e.g., show an error message)
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -135,6 +162,8 @@ class _BookingScreenState extends State<BookingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(height: 16),
+
             // Room Name
             Text(
               widget.room.name,
@@ -171,6 +200,13 @@ class _BookingScreenState extends State<BookingScreen> {
                   style: TextStyle(fontSize: 16),
                 ),
               ),
+            ),
+            SizedBox(height: 16),
+
+            // Calculate and display total amount
+            Text(
+              'Amount to pay: \$${getTotalAmount().toStringAsFixed(2)}', // Display total amount
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
 

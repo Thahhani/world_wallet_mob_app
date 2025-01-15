@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:worldwalletnew/presentation/homepage.dart';
 
 
-String? baseUrl = 'http://192.168.1.150:5000'; // Django API URL
+String? baseUrl = 'http://192.168.1.73:5000'; // Django API URL
 int? loginId;
+String? usernames;
 
 Future<void> loginFunction(String username, String password, context) async {
   final Dio dio = Dio(); // Dio instance
@@ -29,6 +30,7 @@ print(response.data);
     if (response.statusCode == 200) {
       if (response.data['message'] == 'success') {
         loginId = response.data['login_id'];
+        usernames=username;
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (gy) => Homepage(username: username,)));
       }

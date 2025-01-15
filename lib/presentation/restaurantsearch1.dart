@@ -7,59 +7,8 @@ import 'package:worldwalletnew/services/loginApi.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:dio/dio.dart';
 
-// Your API URL
 
-// class Restaurant {
-//   final String name;
-//   final String imageUrl;
-//   final String description;
-//   final List<String> menu;
-//   final double rating;
-//   final String cuisine;
-//   final double priceRange;
-//   final LatLng location;
-//   final List<String> reviews;
 
-//   Restaurant({
-//     required this.name,
-//     required this.imageUrl,
-//     required this.description,
-//     required this.menu,
-//     required this.rating,
-//     required this.cuisine,
-//     required this.priceRange,
-//     required this.location,
-//     required this.reviews,
-//   });
-
-//   factory Restaurant.fromJson(Map<String, dynamic> json) {
-//     return Restaurant(
-//       name: json['name'],
-//       imageUrl: json['imageUrl'],
-//       description: json['description'],
-//       menu: List<String>.from(json['menu']),
-//       rating: json['rating'].toDouble(),
-//       cuisine: json['cuisine'],
-//       priceRange: json['priceRange'].toDouble(),
-//       location: LatLng(json['latitude'], json['longitude']),
-//       reviews: List<String>.from(json['reviews']),
-//     );
-//   }
-// }
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Restaurant Finder',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: RestaurantSearchPage(),
-    );
-  }
-}
 
 class RestaurantSearchPage extends StatefulWidget {
   @override
@@ -68,10 +17,7 @@ class RestaurantSearchPage extends StatefulWidget {
 
 class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
   List<Map<String, dynamic>> filteredRestaurants = [];
-  String selectedCuisine = 'All';
-  double minPrice = 0;
-  double maxPrice = 50;
-  double minRating = 0;
+  List<Map<String, dynamic>> allRestaurants = [];  // Store all restaurants
   bool isLoading = true;
 
   Dio dio = Dio();
@@ -82,6 +28,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     _fetchRestaurants();
   }
 
+  // Fetch restaurant data
   Future<void> _fetchRestaurants() async {
     try {
       final response = await dio.get('$baseUrl/viewrestaurant');
@@ -90,31 +37,16 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
       if (response.statusCode == 200) {
         print("Response Data: ${response.data}");
 
-        // Check if the response contains a list (or a map with a list inside)
+        // Check if the response contains a list
         if (response.data is List) {
           List<dynamic> data = response.data;
           List<Map<String, dynamic>> restaurants =
               data.map((json) => Map<String, dynamic>.from(json)).toList();
           setState(() {
-            filteredRestaurants = restaurants;
+            allRestaurants = restaurants;
+            filteredRestaurants = restaurants;  // Initially show all restaurants
             isLoading = false;
           });
-          // } else if (response.data is Map) {
-          //   Map<String, dynamic> data = response.data;
-          //    List<dynamic> restaurantsData = data;
-          //     List<Restaurant> restaurants = restaurantsData.map((json) => Restaurant.fromJson(json)).toList();
-          //     setState(() {
-          //       filteredRestaurants = restaurants;
-          //       isLoading = false;
-          //     });
-          // if (data != null) {
-
-          // } else {
-          //   print("API response doesn't contain a 'restaurants' key");
-          //   setState(() {
-          //     isLoading = false;
-          //   });
-          // }
         } else {
           print("Unexpected response format: ${response.data}");
           setState(() {
@@ -135,16 +67,19 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     }
   }
 
-  // void filterRestaurants() {
-  //   setState(() {
-  //     filteredRestaurants = filteredRestaurants.where((restaurant) {
-  //       return (selectedCuisine == 'All' || restaurant.cuisine == selectedCuisine) &&
-  //           restaurant.priceRange >= minPrice &&
-  //           restaurant.priceRange <= maxPrice &&
-  //           restaurant.rating >= minRating;
-  //     }).toList();
-  //   });
-  // }
+  // Filter restaurants based on name or place
+  void filterRestaurants(String query) {
+    setState(() {
+      filteredRestaurants = allRestaurants.where((restaurant) {
+        return restaurant['name']
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            restaurant['place']
+                .toLowerCase()
+                .contains(query.toLowerCase());
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -157,78 +92,25 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Filter options for restaurants
-            // Row(
-            //   children: [
-            //     Expanded(
-            //       child: InputDecorator(
-            //         decoration: InputDecoration(
-            //           border: OutlineInputBorder(
-            //             borderRadius: BorderRadius.circular(10),
-            //             borderSide: BorderSide(color: Colors.deepOrangeAccent),
-            //           ),
-            //           filled: true,
-            //           fillColor: Colors.white,
-            //         ),
-            //         child: DropdownButton<String>(
-            //           value: selectedCuisine,
-            //           isExpanded: true,
-            //           items: ['All', 'Japanese', 'Italian', 'Indian', 'Chinese']
-            //               .map((String value) {
-            //             return DropdownMenuItem<String>(
-            //               value: value,
-            //               child: Text(value),
-            //             );
-            //           }).toList(),
-            //           onChanged: (newValue) {
-            //             setState(() {
-            //               selectedCuisine = newValue!;
-            //             });
-            //             // filterRestaurants();
-            //           },
-            //           style: TextStyle(color: Colors.deepOrangeAccent),
-            //         ),
-            //       ),
-            //     ),
-            //     SizedBox(width: 16),
-            //     Text('Price Range:'),
-            // Slider(
-            //   min: 0,
-            //   max: 50,
-            //   value: maxPrice,
-            //   activeColor: Colors.deepOrangeAccent,
-            //   onChanged: (value) {
-            //     setState(() {
-            //       maxPrice = value;
-            //     });
-            //     // filterRestaurants();
-            //   },
-            // ),
-            //   ],
-            // ),
-            // Row(
-            //   children: [
-            //     Text('Min Rating:'),
-            //     RatingBar.builder(
-            //       initialRating: minRating,
-            //       minRating: 0,
-            //       itemCount: 5,
-            //       itemSize: 20.0,
-            //       itemBuilder: (context, _) => Icon(
-            //         Icons.star,
-            //         color: Colors.amber,
-            //       ),
-            //       onRatingUpdate: (rating) {
-            //         setState(() {
-            //           minRating = rating;
-            //         });
-            //         // filterRestaurants();
-            //       },
-            //     ),
-            //   ],
-            // ),
+            // Search bar
+            TextField(
+              onChanged: (value) {
+                filterRestaurants(value); // Trigger the filter when user changes text
+              },
+              decoration: InputDecoration(
+                labelText: 'Search by name or place',
+                labelStyle: TextStyle(color: Colors.deepPurple),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              ),
+              style: TextStyle(color: Colors.black),
+            ),
+
             SizedBox(height: 16),
-            // Loading indicator
+
+            // Loading indicator or restaurant list
             isLoading
                 ? Center(child: CircularProgressIndicator())
                 : Expanded(
@@ -243,15 +125,6 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: ListTile(
-                            // leading: ClipRRect(
-                            //   borderRadius: BorderRadius.circular(10),
-                            //   child: Image.network(
-                            //     restaurant.imageUrl,
-                            //     width: 100,
-                            //     height: 100,
-                            //     fit: BoxFit.cover,
-                            //   ),
-                            // ),
                             title: Text(
                               restaurant['name'],
                               style: TextStyle(
