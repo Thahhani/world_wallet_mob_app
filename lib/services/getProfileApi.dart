@@ -1,13 +1,18 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:worldwalletnew/services/loginApi.dart';
 
   final Dio _dio = Dio(); // Create Dio instance for HTTP requests
 
   // Fetch user profile data from the backend API
-  Future<Map<String, dynamic>> fetchUserProfile(String userId) async {
+
+   Map<String, dynamic>profiledata={};
+   
+  Future<Map<String, dynamic>> fetchUserProfile() async {
     try {
       // Replace this URL with your actual API endpoint for fetching profile
-      final response = await _dio.get('https://your-api-endpoint.com/users/$userId/profile');
-      
+      final response = await _dio.get('$baseUrl/view-profile/$loginId/');
+      print(response.data);
       if (response.statusCode == 200) {
         // Assuming the response data is the user's profile details
         return response.data; // Return the profile data
@@ -21,15 +26,19 @@ import 'package:dio/dio.dart';
   }
 
   // Update user profile data on the backend
-  Future<bool> updateUserProfile(String userId, Map<String, dynamic> profileData) async {
+  Future<bool> updateUserProfile( Map<String, dynamic> profileData,context) async {
     try {
       // Replace this URL with your actual API endpoint for updating profile
       final response = await _dio.put(
-        'https://your-api-endpoint.com/users/$userId/profile',
+        '$baseUrl/view-profile/$loginId/',
         data: profileData,
       );
       
       if (response.statusCode == 200) {
+        profileData=await fetchUserProfile();
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Profile Updated'),
+    ));
         return true; // Successfully updated
       } else {
         throw Exception('Failed to update user profile');
@@ -39,4 +48,10 @@ import 'package:dio/dio.dart';
       return false; // Failed to update
     }
   }
+
+
+
+  // update
+
+  
 

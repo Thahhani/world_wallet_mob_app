@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:worldwalletnew/services/loginApi.dart';
+import 'package:worldwalletnew/services/roomFeedback.dart';
 
 class Booking {
   final String bookingId;
@@ -131,12 +133,16 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: TextButton.icon(
                         onPressed: () {
+                          TextEditingController feedbackController=TextEditingController();
+                          double rating= 0;
                          showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
                             title: Text('Rate Now'),
-                            content: RatingBar.builder(
-                              initialRating: 3.0, // Default rating
+                            content: Column(mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RatingBar.builder(
+                              initialRating: rating, // Default rating
                               minRating: 1,
                               direction: Axis.horizontal,
                               allowHalfRating: true,
@@ -152,10 +158,28 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                                 // You can save the rating via an API or update the state here
                               },
                             ),
+                            SizedBox(height: 10,),
+                            TextField(
+                              controller: feedbackController,
+                              decoration:InputDecoration(label: Text('Enter here'),
+                                border: OutlineInputBorder(
+
+                              )) ,
+                            )
+                              ],),
                             actions: <Widget>[
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  Map<String,dynamic>data={
+                                    'USERID': loginId ,
+                                    'ROOMID': widget.bookinghistory[index]['ROOMID'] ,
+                                    'rating':   rating ,
+                                    'feedback': feedbackController.text ,
+                                  };
+                                  
+RoomFeedbackApi(data, context);
+
+
                                 },
                                 child: Text('Submit'),
                               ),

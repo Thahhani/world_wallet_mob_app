@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:worldwalletnew/presentation/homepage.dart';
+import 'package:worldwalletnew/services/getProfileApi.dart';
 
 
-String? baseUrl = 'http://192.168.1.73:5000'; // Django API URL
+String? baseUrl = 'http://192.168.1.20:5000'; // Django API URL
 int? loginId;
 String? usernames;
 
@@ -30,6 +31,7 @@ print(response.data);
     if (response.statusCode == 200) {
       if (response.data['message'] == 'success') {
         loginId = response.data['login_id'];
+        profiledata=await    fetchUserProfile();
         usernames=username;
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (gy) => Homepage(username: username,)));

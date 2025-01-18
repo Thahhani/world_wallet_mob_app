@@ -7,7 +7,9 @@ import 'package:worldwalletnew/presentation/notification.dart';
 import 'package:worldwalletnew/presentation/roombookinghistory.dart';
 import 'package:worldwalletnew/presentation/roomsearch1.dart';
 import 'package:worldwalletnew/presentation/foodbookinghistory.dart';
+import 'package:worldwalletnew/presentation/viewProfile.dart';
 import 'package:worldwalletnew/presentation/walletmanage.dart';
+import 'package:worldwalletnew/services/getProfileApi.dart';
 import 'package:worldwalletnew/services/getfoodorderingApi.dart';
 import 'package:worldwalletnew/services/getfoodbookingHistory.dart';
 import 'package:worldwalletnew/services/getnotificationApi.dart';
@@ -38,14 +40,14 @@ final username;
                   radius: 30.0,
                 ),
                 title: Text(
-                  username, // Replace with the actual user's name
+                  profiledata['Name'], // Replace with the actual user's name
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: Text(
-                  '$username@gmail.com', // Replace with the user's email
+                  profiledata['place'], // Replace with the user's email
                   style: TextStyle(
                     color: Colors.white70,
                   ),
@@ -55,14 +57,16 @@ final username;
           ),
 
           // Profile section
-          // ListTile(
-          //   leading: Icon(Icons.account_circle), // Profile icon
-          //   title: Text('Profile'),
-          //   onTap: () {
-          //     // Navigate to profile screen
-          //     // Navigator.pushNamed(context, '/profile');
-          //   },
-          // ),
+          ListTile(
+            leading: Icon(Icons.account_circle), // Profile icon
+            title: Text('Profile'),
+            onTap: () async{
+
+         profiledata=await    fetchUserProfile();
+              // Navigate to profile screen
+              Navigator.push(context, MaterialPageRoute(builder: (tfc)=>ProfileScreen(profileData: profiledata,)));
+            },
+          ),
 
           // Logout button
           ListTile(
@@ -113,6 +117,7 @@ final username;
         elevation: 0,
       ),
       body: Container(
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.blue.shade200, Colors.blueAccent.shade400],
@@ -162,7 +167,7 @@ final username;
                 // Nearby Restaurants Section
                 _buildFeatureCard(
                   icon: Icons.restaurant,
-                  title: "Nearby Restaurants",
+                  title: "Restaurants",
                   description:
                       "Explore nearby restaurants and enjoy meals within your budget.",
                   onTap: () async {
@@ -202,7 +207,7 @@ final username;
                 //     // Navigate to Wallet Management screen
                 //   },
                 // ),
-                // SizedBox(height: 20),
+                SizedBox(height: 50),
 
                 // Bottom Navigation
                 Padding(

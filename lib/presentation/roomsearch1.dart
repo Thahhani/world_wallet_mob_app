@@ -22,6 +22,7 @@ class Room {
   final String status; // New field (optional)
   final double rating;
 
+
   Room({
     required this.rating,
     required this.id,
@@ -49,7 +50,7 @@ class Room {
     }
 
     return Room(
-      rating: map['average_rating'],
+      rating: map['average_rating']??0.0,
       id: map['id'] ??
           '', // Ensure this value is never null by defaulting to an empty string
       name: map['name'] ?? '', // Same here, default to empty string if null
@@ -252,7 +253,7 @@ class _RoomSearch1State extends State<RoomSearch1> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Text(room.rating.toString(),
+                                    Text(room.rating.toStringAsFixed(1),
                                         style: TextStyle(
                                             fontSize: 14, color: Colors.grey)),
                                     SizedBox(
@@ -361,43 +362,57 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
               SizedBox(height: 8),
               for (var amenity in widget.room.reviews)
                 Card(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          SizedBox(
-                            width: 5,
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Icon(Icons.person),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(amenity['feedback'],
+                                    style: TextStyle(fontSize: 16)),
+                              ),
+                            ],
                           ),
-                          Icon(Icons.person),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(amenity['feedback'],
-                                style: TextStyle(fontSize: 16)),
-                          ),
+                      
+                          Row(
+                            children: [
+                              Text(amenity['rating']),
+                              Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 14,
+                              ),
+                               SizedBox(width: 10,)
+                             
+                            ],
+                          )
+                          // Card(child: Padding(
+                          //   padding: const EdgeInsets.all(8.0),
+                          //   child: ,
+                          // )),
+                          
                         ],
                       ),
 
-                      Row(
-                        children: [
-                          Text(amenity['rating']),
-                          Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 14,
-                          ),
-                           SizedBox(width: 10,)
-                         
-                        ],
-                      )
-                      // Card(child: Padding(
-                      //   padding: const EdgeInsets.all(8.0),
-                      //   child: ,
-                      // )),
-                      
+                     
+                                    Text(
+                                      '   Reply:',
+                                      style:
+                                          TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    Text('   ${amenity['reply'] ?? 'no reply'}'),
+                                    SizedBox(height: 5,)
                     ],
                   ),
                 ),

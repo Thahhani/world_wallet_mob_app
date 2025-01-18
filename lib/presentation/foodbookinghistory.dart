@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:worldwalletnew/services/foodfeedback.dart';
+import 'package:worldwalletnew/services/loginApi.dart';
 
-// Sample data for bookings
 class FoodBookingHistoryScreen extends StatefulWidget {
   final List<dynamic> foodHistory;
-  
+
   const FoodBookingHistoryScreen({super.key, required this.foodHistory});
 
   @override
@@ -13,33 +14,6 @@ class FoodBookingHistoryScreen extends StatefulWidget {
 }
 
 class _FoodBookingHistoryScreenState extends State<FoodBookingHistoryScreen> {
-  // Cancel Booking Function
-  void cancelBooking(String bookingId) {
-    // In real-world application, here you can cancel the booking through an API call
-    // setState(() {
-    //   bookings.firstWhere((booking) => booking.bookingId == bookingId).isCancelled = true;
-    // });
-
-    // Cancellation Confirmation
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Booking Cancelled'),
-          content: Text('Your booking has been cancelled successfully.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +25,8 @@ class _FoodBookingHistoryScreenState extends State<FoodBookingHistoryScreen> {
         itemCount: widget.foodHistory.length,
         itemBuilder: (context, index) {
           final booking = widget.foodHistory[index];
+          final orderItems = booking['ORDERID']; // Extracting ORDERID list
+
           return Card(
             elevation: 5,
             margin: EdgeInsets.all(10),
@@ -60,67 +36,88 @@ class _FoodBookingHistoryScreenState extends State<FoodBookingHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Item: ${widget.foodHistory[index]['ORDERID']['MENUID']['foodname']}',
+                    'User ID: ${booking['USERID']}',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    'Type: ${widget.foodHistory[index]['ORDERID']['MENUID']['foodtype']}',
+                  Text('Order Status: ${booking['status']}'),
+                  Text('Order Date: ${booking['created_at']}'),
+                  Divider(),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: orderItems.length,
+                    itemBuilder: (context, itemIndex) {
+                      final item = orderItems[itemIndex];
+                      final menu = item['MENUID'];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Item: ${menu['foodname']}',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Type: ${menu['foodtype']}'),
+                          Text('Price: ${menu['price']}'),
+                          Text('Quantity: ${item['quantity']}'),
+                          Text('Item Status: ${item['status']}'),
+                          Divider(),
+                        ],
+                      );
+                    },
                   ),
-                  Text(
-                    'Price: ${widget.foodHistory[index]['ORDERID']['MENUID']['price']}',
-                  ),
-                  Text(
-                    'Quantity: ${widget.foodHistory[index]['ORDERID']['quantity']}',
-                  ),
-                  Text(
-                    'Status: ${widget.foodHistory[index]['status']}',
-                  ),
-                  Text(
-                    'Date: ${widget.foodHistory[index]['created_at']}',
-                  ),
-                  // Check if booking is cancelled or not, based on some condition
-                  // You should ensure your data model includes isCancelled or equivalent flag
-                  if (booking['isCancelled'] == false)
-                    ElevatedButton(
-                      onPressed: () =>
-                          cancelBooking(booking['bookingId']), // Adjust based on your data
-                      child: Text('Cancel Booking'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    ),
-                  if (booking['isCancelled'] == true)
-                    Text(
-                      'Booking Cancelled',
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                    ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextButton.icon(
                       onPressed: () {
+                        TextEditingController feedbackController =
+                            TextEditingController();
+                        double rating = 0;
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
                             title: Text('Rate Now'),
-                            content: RatingBar.builder(
-                              initialRating: 3.0, // Default rating
-                              minRating: 1,
-                              direction: Axis.horizontal,
-                              allowHalfRating: true,
-                              itemCount: 5,
-                              itemSize: 40.0,
-                              itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
-                              itemBuilder: (context, index) => Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                              ),
-                              onRatingUpdate: (rating) {
-                                print('Rated: $rating');
-                                // You can save the rating via an API or update the state here
-                              },
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RatingBar.builder(
+                                  initialRating: rating,
+                                  minRating: 1,
+                                  direction: Axis.horizontal,
+                                  allowHalfRating: true,
+                                  itemCount: 5,
+                                  itemSize: 40.0,
+                                  itemPadding:
+                                      EdgeInsets.symmetric(horizontal: 4.0),
+                                  itemBuilder: (context, _) => Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                  ),
+                                  onRatingUpdate: (newRating) {
+                                    rating = newRating;
+                                  },
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                TextField(
+                                  controller: feedbackController,
+                                  decoration: InputDecoration(
+                                      label: Text('Enter feedback here'),
+                                      border: OutlineInputBorder()),
+                                )
+                              ],
                             ),
                             actions: <Widget>[
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  Map<String, dynamic> data = {
+                                    'USERID': loginId,
+                                    'RESTAURANTID': orderItems.first['MENUID']
+                                        ['RESTAURANTID'],
+                                    'MENUID': orderItems.first['MENUID']['id'],
+                                    'rating': rating,
+                                    'feedback': feedbackController.text,
+                                  };
+
+                                  foodFeedbackApi(data, context);
                                 },
                                 child: Text('Submit'),
                               ),

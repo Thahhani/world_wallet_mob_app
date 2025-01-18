@@ -7,16 +7,16 @@ import 'package:worldwalletnew/services/loginApi.dart';
 
 
   // Submit a food order (e.g., user places an order)
-  Future<void> placeFoodOrder( orderData,context) async {
+  Future<void> foodFeedbackApi(Map<String, dynamic> orderData,context) async {
     print('object');
     try {
       // Replace with your actual API endpoint to submit an order
-      final response = await _dio.post('$baseUrl/place_food_order/', data:{'USERID':loginId,'datas':orderData } );
+      final response = await _dio.post('$baseUrl/food-rating-feedback/', data: orderData);
 print(response.data);
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Booking success')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('send')));
         Navigator.pop(context);
-         Navigator.pop(context);
+        //  Navigator.pop(context);
 
         // Assuming the response contains the order confirmation
         return response.data;
