@@ -133,10 +133,12 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                               children: [
                                 Text('${restaurant['place']}'),
                                 Text('${restaurant['phoneno']} '),
+                                if(restaurant['average_rating']!=null)
                                 Row(
                                   children: [
+                                    
                                     Text(
-                                        '${restaurant['average_rating'].toStringAsFixed(1)}'),
+                                        '${restaurant['average_rating'].toStringAsFixed(1) }'),
                                     Icon(
                                       Icons.star,
                                       color: Colors.amber,
