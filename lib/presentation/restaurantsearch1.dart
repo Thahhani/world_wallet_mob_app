@@ -17,6 +17,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
   List<Map<String, dynamic>> allRestaurants = []; // Store all restaurants
   bool isLoading = true;
 
+
   Dio dio = Dio();
 
   @override
@@ -430,6 +431,8 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  
+  TextEditingController upipinController = TextEditingController();
   // Calculate the total amount
   double get totalAmount {
     double total = 0;
@@ -522,7 +525,54 @@ class _CartScreenState extends State<CartScreen> {
             ElevatedButton(
               onPressed: () {
                 print(widget.cart);
-                placeFoodOrder(widget.cart, context);
+
+  showDialog(
+  context: context,
+  builder: (context) => AlertDialog(
+    title: Text('Enter your Pin'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextFormField(
+          controller: upipinController,
+          keyboardType: TextInputType.number, // Ensures numeric keypad
+          obscureText: true, // Hides the PIN input for security
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () async {
+            if (upipinController.text == upiPin) { // Corrected string comparison
+              Navigator.pop(context); // Close the dialog first
+              await  placeFoodOrder(widget.cart, context);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Invalid PIN'),
+                  action: SnackBarAction(
+                    label: 'OK',
+                    onPressed: () {},
+                  ),
+                ),
+              );
+            }
+          },
+          child: Text('Pay Now'),
+        ),
+        SizedBox(height: 10),
+      ],
+    ),
+  ),
+);
+
+
+
+
+               
               },
               child: Text('Place Order'),
               style: ElevatedButton.styleFrom(

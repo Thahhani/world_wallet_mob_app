@@ -100,122 +100,89 @@ class RoomSearch1 extends StatefulWidget {
 }
 
 class _RoomSearch1State extends State<RoomSearch1> {
-  List<Room> filteredRooms = []; // Start with an empty list
+  List<Room> filteredRooms = [];
   List<Room> allRooms = [];
-  String searchQuery = '';
-  DateTime? selectedDate = DateTime.now();
+  TextEditingController queryController = TextEditingController();
   TextEditingController amountController = TextEditingController();
-
-  // Function to filter rooms based on the location (search query)
-  void filterByLocation(String query) {
-    setState(() {
-      searchQuery = query;
-
-      // Filter rooms based on location (case-insensitive)
-      filteredRooms = allRooms.where((room) {
-        return room.location.toLowerCase().contains(query.toLowerCase());
-      }).toList();
-
-      // After applying location filter, apply the price filter as well
-      filterByAmount(amountController.text);
-    });
-  }
-
-  // Function to filter rooms based on the entered amount (budget)
-  void filterByAmount(String amountText) {
-    setState(() {
-      // Get the price filter from the controller and try parsing it to a double
-      double? maxPrice =
-          amountText.isNotEmpty ? double.tryParse(amountText) : null;
-
-      // Further filter rooms based on price (maxPrice)
-      filteredRooms = filteredRooms.where((room) {
-        return maxPrice == null || room.price >= maxPrice;
-      }).toList();
-    });
-  }
-
-  // Function to fetch rooms from the API and update state
-  void fetchAndUpdateRooms() async {
-    try {
-      List<Room> rooms = await fetchRooms(); // Fetch rooms from API
-      setState(() {
-        allRooms = rooms;
-        filteredRooms = rooms; // Initially, show all rooms
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to fetch rooms: $e'),
-      ));
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    fetchAndUpdateRooms(); // Fetch rooms when the widget is initialized
-    amountController.addListener(() {
-      filterByAmount(amountController.text);
-      setState(() {});
+    fetchAndUpdateRooms();
+    queryController.addListener(filterRooms);
+    amountController.addListener(filterRooms);
+  }
+
+  // Function to fetch rooms and update UI
+  void fetchAndUpdateRooms() async {
+    try {
+      List<Room> rooms = await fetchRooms();
+      setState(() {
+        allRooms = rooms;
+        filteredRooms = List.from(allRooms); // Copy of allRooms
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch rooms: $e')),
+      );
+    }
+  }
+
+  // Unified filter function
+  void filterRooms() {
+    String query = queryController.text.toLowerCase();
+    double? maxPrice = double.tryParse(amountController.text);
+
+    setState(() {
+      filteredRooms = allRooms.where((room) {
+        bool matchesLocation = query.isEmpty || room.location.toLowerCase().contains(query);
+        bool matchesPrice = maxPrice == null || room.price <= maxPrice;
+        return matchesLocation && matchesPrice;
+      }).toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Browse Rooms'),
-        backgroundColor: Colors.deepPurple,
-      ),
+      appBar: AppBar(title: Text('Browse Rooms'), backgroundColor: Colors.deepPurple),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Search bar with decoration and rounded corners for location search
+            // Location search bar
             TextField(
-              onChanged: filterByLocation, // Call location filter
+              controller: queryController,
               decoration: InputDecoration(
-                labelText: 'Search Rooms',
+                labelText: 'Search by Location',
                 labelStyle: TextStyle(color: Colors.deepPurple),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 prefixIcon: Icon(Icons.search, color: Colors.deepPurple),
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               ),
               style: TextStyle(color: Colors.black),
             ),
+            SizedBox(height: 10),
 
-            SizedBox(height: 5),
-
-            // Amount filter (budget input)
+            // Budget filter
             TextField(
               controller: amountController,
-              onChanged: (value) {
-                filterByAmount(value); // Call price filter
-              },
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: 'Enter Budget',
                 labelStyle: TextStyle(color: Colors.deepPurple),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                 prefixIcon: Icon(Icons.attach_money, color: Colors.deepPurple),
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               ),
               style: TextStyle(color: Colors.black),
-              keyboardType: TextInputType.numberWithOptions(
-                  decimal: true), // Allow decimal input for budget
             ),
-
             SizedBox(height: 10),
 
-            // Display filtered rooms or show loading spinner
+            // Room List
             Expanded(
               child: filteredRooms.isEmpty
-                  ? Center(child: CircularProgressIndicator())
+                  ? Center(child: Text("No rooms available", style: TextStyle(fontSize: 16)))
                   : ListView.builder(
                       itemCount: filteredRooms.length,
                       itemBuilder: (context, index) {
@@ -223,60 +190,35 @@ class _RoomSearch1State extends State<RoomSearch1> {
                         return Card(
                           elevation: 5,
                           margin: EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           child: ListTile(
                             leading: SizedBox(
                               height: 100,
-                              width: 60, // Limit width of the leading image
-                              child: Image.network('$baseUrl/${room.imageUrl}',
-                                  fit: BoxFit.fill),
+                              width: 60,
+                              child: Image.network('$baseUrl/${room.imageUrl}', fit: BoxFit.fill),
                             ),
                             title: Text(
-                              room.name ??
-                                  "Unnamed Room", // Display default name if null
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                              room.name ?? "Unnamed Room",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('\$${room.price} / night',
-                                    style: TextStyle(
-                                        fontSize: 16, color: Colors.green)),
-                                SizedBox(height: 2),
-                                Text(room.location,
-                                    style: TextStyle(
-                                        fontSize: 14, color: Colors.grey)),
-                                SizedBox(height: 2),
+                                Text('\$${room.price} / night', style: TextStyle(fontSize: 16, color: Colors.green)),
+                                Text(room.location, style: TextStyle(fontSize: 14, color: Colors.grey)),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Text(room.rating.toStringAsFixed(1),
-                                        style: TextStyle(
-                                            fontSize: 14, color: Colors.grey)),
-                                    SizedBox(
-                                      width: 2,
-                                    ),
-                                    Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                      size: 15,
-                                    )
+                                    Text(room.rating.toStringAsFixed(1), style: TextStyle(fontSize: 14, color: Colors.grey)),
+                                    Icon(Icons.star, color: Colors.amber, size: 15),
                                   ],
                                 ),
-                                SizedBox(height: 4),
                               ],
                             ),
                             trailing: Icon(Icons.arrow_forward_ios),
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      RoomDetailPage(room: room),
-                                ),
+                                MaterialPageRoute(builder: (context) => RoomDetailPage(room: room)),
                               );
                             },
                           ),
@@ -290,6 +232,9 @@ class _RoomSearch1State extends State<RoomSearch1> {
     );
   }
 }
+
+
+
 
 // RoomDetailPage remains unchanged except for the carousel code below
 class RoomDetailPage extends StatefulWidget {

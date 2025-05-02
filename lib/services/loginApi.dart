@@ -5,9 +5,10 @@ import 'package:worldwalletnew/presentation/homepage.dart';
 import 'package:worldwalletnew/services/getProfileApi.dart';
 
 
-String? baseUrl = 'http://192.168.1.74:5000'; // Django API URL
+String? baseUrl = 'http://192.168.7.201:5000'; // Django API URL
 int? loginId;
 String? usernames;
+String? upiPin='1';
 
 Future<void> loginFunction(String username, String password, context) async {
   final Dio dio = Dio(); // Dio instance

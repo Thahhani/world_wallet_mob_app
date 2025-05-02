@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:worldwalletnew/services/add.wallet.dart';
 import 'package:worldwalletnew/services/getTransactionHistory.dart';
+import 'package:worldwalletnew/services/loginApi.dart';
 
 
 class WalletExpenseScreen extends StatefulWidget {
@@ -161,6 +162,77 @@ class _WalletExpenseScreenState extends State<WalletExpenseScreen> { // Changed 
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text("View Transaction History", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+
+
+
+
+               SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: ()async {
+                  //  List<Map<String, dynamic>>orderHistory=      await getTransactionHistory();
+                  // // Navigate to transaction history screen
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => TransactionHistoryScreen(transactions: orderHistory)),
+                  // );
+                 void showSetUpiPinDialog(BuildContext context) {
+  TextEditingController upiPinController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Set UPI PIN'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: upiPinController,
+              keyboardType: TextInputType.number,
+              obscureText: true, // Hides input for security
+              decoration: InputDecoration(
+                labelText: "Enter 6-digit PIN",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "PIN is required";
+                } else if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+                  return "Enter a valid 6-digit PIN";
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  print("UPI PIN Set: ${upiPinController.text}");
+                  upiPin=upiPinController.text;
+                  Navigator.pop(context); // Close dialog
+                }
+              },
+              child: Text('Submit'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+showSetUpiPinDialog(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text("Set upi pin", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
               SizedBox(height: 20),
 
@@ -392,3 +464,159 @@ class TransactionHistoryScreen extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+
+// class WalletExpenseScreen extends StatefulWidget {
+//   final double balance;
+
+//   // Constructor to receive balance
+//   const WalletExpenseScreen({super.key, required this.balance});
+
+//   @override
+//   _WalletExpenseScreenState createState() => _WalletExpenseScreenState();
+// }
+
+// class _WalletExpenseScreenState extends State<WalletExpenseScreen> {
+//   double totalRoomSpending = 0;
+//   double totalFoodSpending = 0;
+
+//   List<Map<String, dynamic>> transactions = [
+//     {'type': 'Room Booking', 'amount': 100, 'date': '2024-12-01'},
+//     {'type': 'Food Order', 'amount': 25, 'date': '2024-12-02'},
+//     {'type': 'Room Booking', 'amount': 80, 'date': '2024-12-05'},
+//     {'type': 'Food Order', 'amount': 30, 'date': '2024-12-06'},
+//     {'type': 'Room Booking', 'amount': 50, 'date': '2024-12-10'},
+//   ];
+
+//   // Function to calculate total spending for rooms and food
+//   void calculateTotalSpending() {
+//     totalRoomSpending = 0;
+//     totalFoodSpending = 0;
+
+//     for (var transaction in transactions) {
+//       if (transaction['type'] == 'Room Booking') {
+//         totalRoomSpending += transaction['amount'];
+//       } else if (transaction['type'] == 'Food Order') {
+//         totalFoodSpending += transaction['amount'];
+//       }
+//     }
+//   }
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     calculateTotalSpending(); // Calculate total spending on init
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     bool isLowBalance = widget.balance < 20.0;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text("Wallet Manage & Expenses", style: TextStyle(fontWeight: FontWeight.bold)),
+//         backgroundColor: Colors.teal[600],
+//         leading: IconButton(
+//           icon: Icon(Icons.arrow_back, color: Colors.white),
+//           onPressed: () => Navigator.pop(context),
+//         ),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: SingleChildScrollView(
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               // Wallet Balance Display
+//               Text(
+//                 "Current Wallet Balance:",
+//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal[800]),
+//               ),
+//               SizedBox(height: 10),
+//               Text(
+//                 "\$${widget.balance}",
+//                 style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: isLowBalance ? Colors.red : Colors.green),
+//               ),
+//               SizedBox(height: 20),
+
+//               // Low Balance Alert (if applicable)
+//               if (isLowBalance)
+//                 Container(
+//                   padding: EdgeInsets.all(15),
+//                   decoration: BoxDecoration(
+//                     color: Colors.yellow[100],
+//                     borderRadius: BorderRadius.circular(8),
+//                     boxShadow: [
+//                       BoxShadow(
+//                         color: Colors.grey.withOpacity(0.3),
+//                         spreadRadius: 3,
+//                         blurRadius: 5,
+//                         offset: Offset(0, 3),
+//                       ),
+//                     ],
+//                   ),
+//                   child: Row(
+//                     children: [
+//                       Icon(Icons.warning, color: Colors.orange),
+//                       SizedBox(width: 10),
+//                       Expanded(
+//                         child: Text(
+//                           "Your wallet balance is low! Please add funds to continue making reservations or orders.",
+//                           style: TextStyle(fontSize: 16, color: Colors.orange),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               SizedBox(height: 20),
+
+//               // Total Spending Summary
+//               _totalSpendingSummary(),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   // Total Spending Summary Widget
+//   Widget _totalSpendingSummary() {
+//     return Card(
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+//       elevation: 5,
+//       child: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text(
+//               "Total Spending",
+//               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//             ),
+//             SizedBox(height: 10),
+//             Text(
+//               "Room Booking: \$${totalRoomSpending.toStringAsFixed(2)}",
+//               style: TextStyle(fontSize: 18, color: Colors.blueGrey),
+//             ),
+//             Text(
+//               "Food Orders: \$${totalFoodSpending.toStringAsFixed(2)}",
+//               style: TextStyle(fontSize: 18, color: Colors.blueGrey),
+//             ),
+//             SizedBox(height: 10),
+//             Text(
+//               "Total Spending: \$${(totalRoomSpending + totalFoodSpending).toStringAsFixed(2)}",
+//               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

@@ -19,6 +19,7 @@ class BookingScreen extends StatefulWidget {
 class _BookingScreenState extends State<BookingScreen> {
   DateTime? checkInDate;
   DateTime? checkOutDate;
+  TextEditingController upipinController = TextEditingController();
 
   // Function to calculate the total number of days
   int getTotalDays() {
@@ -31,7 +32,8 @@ class _BookingScreenState extends State<BookingScreen> {
   // Function to calculate the total amount
   double getTotalAmount() {
     int totalDays = getTotalDays();
-    return totalDays * widget.room.price; // Multiply price per day by the number of days
+    return totalDays *
+        widget.room.price; // Multiply price per day by the number of days
   }
 
   // Function to handle the check-in date selection
@@ -88,18 +90,21 @@ class _BookingScreenState extends State<BookingScreen> {
 
     // Convert dates to the format 'yyyy-MM-dd'
     String checkInDateFormatted = DateFormat('yyyy-MM-dd').format(checkInDate!);
-    String checkOutDateFormatted = DateFormat('yyyy-MM-dd').format(checkOutDate!);
+    String checkOutDateFormatted =
+        DateFormat('yyyy-MM-dd').format(checkOutDate!);
 
     // API endpoint to save booking data
-    final String url = "$baseUrl/roombooking"; // Replace with your actual backend URL
+    final String url =
+        "$baseUrl/roombooking"; // Replace with your actual backend URL
 
     // Ensure that roomId and other necessary fields are of type String
     final Map<String, dynamic> bookingData = {
       "USERID": loginId, // Send the user ID (loginId as string)
-      "ROOMID": widget.room.id.toString(), // Convert roomId to String if it's an int
+      "ROOMID":
+          widget.room.id.toString(), // Convert roomId to String if it's an int
       "checkindate": checkInDateFormatted, // Send only the date as a string
       "checkoutdate": checkOutDateFormatted, // Send only the date as a string
-      'price':getTotalAmount().toStringAsFixed(2)
+      'price': getTotalAmount()
     };
 
     try {
@@ -115,26 +120,36 @@ class _BookingScreenState extends State<BookingScreen> {
       print("Response Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        Navigator.pop(context);
         // If the server returns a 200 response, navigate to payment process
         showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Payment Successful", style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text("You have paid ₹${getTotalAmount().toStringAsFixed(2)} successfully."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-                // Navigate to the homepage after closing the dialog
-                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Homepage(username: usernames,)),(route) => false,);
-              },
-              child: Text("OK", style: TextStyle(color: Colors.blue)),
-            ),
-          ],
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Payment Successful",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Text(
+                  "You have paid ₹${getTotalAmount()} successfully."),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the dialog
+                    // Navigate to the homepage after closing the dialog
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Homepage(
+                                username: usernames,
+                              )),
+                      (route) => false,
+                    );
+                  },
+                  child: Text("OK", style: TextStyle(color: Colors.blue)),
+                ),
+              ],
+            );
+          },
         );
-      },
-    );
       } else {
         // Handle failure (e.g., show an error message)
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -214,13 +229,57 @@ class _BookingScreenState extends State<BookingScreen> {
             ElevatedButton(
               onPressed: isBookingValid()
                   ? () {
-                      saveBookingToBackend(); // Save booking data to the backend
+                     showDialog(
+  context: context,
+  builder: (context) => AlertDialog(
+    title: Text('Enter your Pin'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextFormField(
+          controller: upipinController,
+          keyboardType: TextInputType.number, // Ensures numeric keypad
+          obscureText: true, // Hides the PIN input for security
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () async {
+            if (upipinController.text == upiPin) { // Corrected string comparison
+              Navigator.pop(context); // Close the dialog first
+              await saveBookingToBackend();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Invalid PIN'),
+                  action: SnackBarAction(
+                    label: 'OK',
+                    onPressed: () {},
+                  ),
+                ),
+              );
+            }
+          },
+          child: Text('Pay Now'),
+        ),
+        SizedBox(height: 10),
+      ],
+    ),
+  ),
+);
+
+                      // Save booking data to the backend
                     }
                   : null,
               child: Text("Proceed to Booking"),
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: isBookingValid() ? Colors.deepPurple : Colors.grey,
+                backgroundColor:
+                    isBookingValid() ? Colors.deepPurple : Colors.grey,
               ),
             ),
           ],
